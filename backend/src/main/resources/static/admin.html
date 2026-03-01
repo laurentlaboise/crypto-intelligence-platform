@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Intelligence Platform - Admin</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="header-left">
+            <h1>Admin Panel</h1>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-outline" onclick="window.location.href='dashboard.html'">Dashboard</button>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="card">
+            <h2>All Users</h2>
+            <div class="table-wrapper">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        <tr><td colspan="5" class="loading-text">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>All Transactions</h2>
+            <div class="table-wrapper">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Coin</th>
+                            <th>Action</th>
+                            <th>Amount (USD)</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactions-tbody">
+                        <tr><td colspan="7" class="loading-text">Loading transactions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="admin.js"></script>
+</body>
+</html>

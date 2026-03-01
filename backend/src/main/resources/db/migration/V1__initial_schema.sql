@@ -1,0 +1,43 @@
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_role ON users(role);
+
+CREATE TABLE user_balances (
+    user_id BIGINT PRIMARY KEY,
+    balance DECIMAL(18, 2) NOT NULL DEFAULT 10000.00,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE transactions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    coin_id VARCHAR(100) NOT NULL,
+    action VARCHAR(10) NOT NULL,
+    amount_usd DECIMAL(18, 2) NOT NULL,
+    execution_price DECIMAL(18, 8) NOT NULL,
+    quantity DECIMAL(24, 12) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE INDEX idx_transactions_user_time ON transactions(user_id, created_at);
+CREATE INDEX idx_transactions_action ON transactions(action);
+
+CREATE TABLE portfolio_holdings (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    coin_id VARCHAR(100) NOT NULL,
+    quantity DECIMAL(24, 12) NOT NULL DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE (user_id, coin_id)
+);
+
+CREATE INDEX idx_holdings_user ON portfolio_holdings(user_id);

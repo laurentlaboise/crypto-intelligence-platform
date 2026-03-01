@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Intelligence Platform - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="header-left">
+            <h1>Crypto Intelligence</h1>
+        </div>
+        <div class="header-right">
+            <span class="balance-display">Balance: $<span id="user-balance">10,000.00</span></span>
+            <button class="btn btn-outline" id="admin-link" style="display:none;" onclick="window.location.href='admin.html'">Admin</button>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <!-- Portfolio Summary -->
+        <section class="card portfolio-card">
+            <h2>Portfolio Summary</h2>
+            <div class="portfolio-stats">
+                <div class="stat">
+                    <span class="stat-label">Total Value</span>
+                    <span class="stat-value" id="total-value">$10,000.00</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">24h Change</span>
+                    <span class="stat-value" id="portfolio-change">$0.00 (0.00%)</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Total Trades</span>
+                    <span class="stat-value" id="total-trades">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Win Rate</span>
+                    <span class="stat-value" id="win-rate">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Price Chart -->
+        <section class="card chart-card">
+            <div class="chart-header">
+                <h2 id="chart-title">Bitcoin (BTC)</h2>
+                <div class="timeframe-selector">
+                    <button class="tf-btn" data-days="0.0417" onclick="changeTimeframe(this)">1H</button>
+                    <button class="tf-btn active" data-days="1" onclick="changeTimeframe(this)">24H</button>
+                    <button class="tf-btn" data-days="7" onclick="changeTimeframe(this)">7D</button>
+                    <button class="tf-btn" data-days="30" onclick="changeTimeframe(this)">30D</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="price-chart"></canvas>
+            </div>
+        </section>
+
+        <!-- Market Data Table -->
+        <section class="card market-card">
+            <div class="market-header">
+                <h2>Market Data</h2>
+                <input type="text" class="search-input" id="market-search" placeholder="Search coins..." oninput="filterMarketTable()">
+            </div>
+            <div class="table-wrapper">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>24h %</th>
+                            <th>Market Cap</th>
+                            <th>Volume (24h)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="market-tbody">
+                        <tr><td colspan="7" class="loading-text">Loading market data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Holdings -->
+        <section class="card holdings-card">
+            <h2>Your Holdings</h2>
+            <div id="holdings-list" class="holdings-list">
+                <p class="muted">No holdings yet. Start trading!</p>
+            </div>
+        </section>
+
+        <!-- Transaction History -->
+        <section class="card history-card">
+            <h2>Transaction History</h2>
+            <div id="transaction-history" class="transaction-list">
+                <p class="muted">No transactions yet.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Trading Modal -->
+    <div id="trade-modal" class="modal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeTradeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Trade Bitcoin</h3>
+                <button class="modal-close" onclick="closeTradeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="trade-info">
+                    <span>Current Price: $<span id="modal-price">0.00</span></span>
+                </div>
+                <div class="form-group">
+                    <label for="trade-amount">Amount (USD)</label>
+                    <input type="number" id="trade-amount" name="tradeAmount" placeholder="Enter amount in USD" min="0.01" step="0.01" oninput="updateTradePreview()">
+                </div>
+                <div class="trade-preview" id="trade-preview" style="display:none;">
+                    <div class="preview-row">
+                        <span>Quantity:</span>
+                        <span id="preview-quantity">0</span>
+                    </div>
+                    <div class="preview-row">
+                        <span>Total Cost:</span>
+                        <span>$<span id="preview-total">0.00</span></span>
+                    </div>
+                </div>
+                <div id="trade-error" class="error-message" style="display:none;"></div>
+                <div id="trade-success" class="success-message" style="display:none;"></div>
+                <button class="btn btn-primary" id="trade-execute-btn" onclick="executeTrade()">Confirm Trade</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

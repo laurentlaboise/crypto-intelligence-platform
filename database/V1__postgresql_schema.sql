@@ -1,0 +1,43 @@
+-- PostgreSQL-specific schema (for production use)
+-- H2-compatible schema is in backend/src/main/resources/db/migration/V1__initial_schema.sql
+
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+CREATE TABLE IF NOT EXISTS user_balances (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id),
+    balance DECIMAL(18, 2) NOT NULL DEFAULT 10000.00
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    coin_id VARCHAR(100) NOT NULL,
+    action VARCHAR(10) NOT NULL,
+    amount_usd DECIMAL(18, 2) NOT NULL,
+    execution_price DECIMAL(18, 8) NOT NULL,
+    quantity DECIMAL(24, 12) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_user_time ON transactions(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_transactions_action ON transactions(action);
+
+CREATE TABLE IF NOT EXISTS portfolio_holdings (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    coin_id VARCHAR(100) NOT NULL,
+    quantity DECIMAL(24, 12) NOT NULL DEFAULT 0,
+    UNIQUE (user_id, coin_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_holdings_user ON portfolio_holdings(user_id);
