@@ -16,11 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -531,6 +533,17 @@ public class AiService {
             aiRequestLogRepository.save(logEntry);
         } catch (Exception e) {
             log.warn("Failed to record AI usage: {}", e.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "0 0 3 * * *") // Run daily at 3 AM
+    public void pruneOldRequestLogs() {
+        try {
+            LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
+            aiRequestLogRepository.deleteByCreatedAtBefore(cutoff);
+            log.info("Pruned AI request logs older than 30 days");
+        } catch (Exception e) {
+            log.warn("Failed to prune AI request logs: {}", e.getMessage());
         }
     }
 }
