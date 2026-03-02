@@ -570,6 +570,494 @@ body {
     color: #ffc107;
 }
 
+/* ========== AI Components: Shared ========== */
+.ai-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #58a6ff, #a371f7);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+    letter-spacing: 0.5px;
+}
+
+.ai-icon-sm {
+    font-size: 0.55rem;
+    padding: 1px 4px;
+    margin-right: 4px;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner-sm {
+    width: 14px;
+    height: 14px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.collapse-icon {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+/* ========== AI Feature 1: Market Analysis ========== */
+.analysis-card {
+    grid-column: span 2;
+}
+
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 16px;
+}
+
+.analysis-header h2 {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+}
+
+.analysis-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    padding: 12px 0;
+}
+
+.analysis-summary {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.signals-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.signal-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.signal-chip.signal-bullish { border-left-color: var(--positive); }
+.signal-chip.signal-bearish { border-left-color: var(--negative); }
+.signal-chip.signal-neutral { border-left-color: var(--accent); }
+
+.signal-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.signal-bullish .signal-tag { background: var(--positive-bg); color: var(--positive); }
+.signal-bearish .signal-tag { background: var(--negative-bg); color: var(--negative); }
+.signal-neutral .signal-tag { background: rgba(88, 166, 255, 0.15); color: var(--accent); }
+
+.signal-text { flex: 1; color: var(--text-primary); }
+.signal-metric { color: var(--text-secondary); font-size: 0.8rem; white-space: nowrap; }
+
+.risk-factors h4 {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.risk-factors ul {
+    list-style: none;
+    padding: 0;
+}
+
+.risk-factors li {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    padding: 4px 0 4px 14px;
+    position: relative;
+}
+
+.risk-factors li::before {
+    content: '\2022';
+    color: var(--negative);
+    position: absolute;
+    left: 0;
+}
+
+.analysis-outlook {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    margin-top: 12px;
+    border-left: 3px solid var(--accent);
+    background: rgba(88, 166, 255, 0.05);
+    border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+/* ========== AI Feature 2: Portfolio Risk ========== */
+.risk-card h2 {
+    display: flex;
+    align-items: center;
+}
+
+.risk-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    padding: 12px 0;
+}
+
+.risk-score-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.risk-score-dial {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid var(--border-color);
+}
+
+.risk-score-dial.risk-low { border-color: var(--positive); }
+.risk-score-dial.risk-medium { border-color: #ffc107; }
+.risk-score-dial.risk-high { border-color: var(--negative); }
+
+.risk-score-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.risk-low .risk-score-value { color: var(--positive); }
+.risk-medium .risk-score-value { color: #ffc107; }
+.risk-high .risk-score-value { color: var(--negative); }
+
+.risk-score-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.risk-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.risk-metric {
+    text-align: center;
+}
+
+.risk-metric-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.risk-metric-value {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.risk-narratives {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.risk-narratives p {
+    margin-bottom: 6px;
+}
+
+.risk-insight {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    background: rgba(88, 166, 255, 0.05);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+/* ========== AI Feature 3: Trade Reasoning ========== */
+.trade-reasoning-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.reasoning-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.reasoning-body {
+    padding: 0 12px 12px;
+}
+
+.reasoning-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    padding: 4px 0;
+}
+
+.reasoning-context {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.reasoning-considerations {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 8px;
+}
+
+.reasoning-considerations li {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    padding: 3px 0 3px 14px;
+    position: relative;
+}
+
+.reasoning-considerations li::before {
+    content: '\2022';
+    color: var(--accent);
+    position: absolute;
+    left: 0;
+}
+
+.reasoning-sentiment {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.sentiment-supportive {
+    background: var(--positive-bg);
+    color: var(--positive);
+}
+
+.sentiment-cautionary {
+    background: var(--negative-bg);
+    color: var(--negative);
+}
+
+.sentiment-neutral {
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent);
+}
+
+.reasoning-disclaimer {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-style: italic;
+    margin-top: 4px;
+}
+
+/* ========== AI Feature 4: Pattern Alerts ========== */
+.alert-bell-container {
+    position: relative;
+}
+
+.alert-bell-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.alert-bell-btn:hover {
+    color: var(--text-primary);
+}
+
+.alert-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--negative);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+.alert-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    width: 360px;
+    max-height: 480px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 200;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.alert-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.alert-list {
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.alert-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(48, 54, 61, 0.3);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.alert-item:hover {
+    background: rgba(88, 166, 255, 0.05);
+}
+
+.alert-item.alert-unread {
+    background: rgba(88, 166, 255, 0.08);
+}
+
+.alert-item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-severity {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.alert-severity-low {
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent);
+}
+
+.alert-severity-medium {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.alert-severity-high {
+    background: var(--negative-bg);
+    color: var(--negative);
+}
+
+.alert-title {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.alert-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.alert-detail {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(48, 54, 61, 0.3);
+}
+
+.alert-narrative {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 4px;
+}
+
+.alert-coin {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
 /* ========== Scrollbar ========== */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-primary); }
@@ -588,4 +1076,19 @@ body {
     .auth-card { padding: 24px; }
     .chart-container { height: 200px; }
     .search-input { width: 100%; }
+    .analysis-card { grid-column: span 1; }
+    .alert-dropdown { width: 300px; right: -60px; }
+    .risk-metrics { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 768px) {
+    .analysis-card {
+        grid-column: span 2;
+    }
+}
+
+@media (min-width: 1024px) {
+    .analysis-card {
+        grid-column: span 2;
+    }
 }

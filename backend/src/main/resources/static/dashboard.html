@@ -14,6 +14,21 @@
         </div>
         <div class="header-right">
             <span class="balance-display">Balance: $<span id="user-balance">10,000.00</span></span>
+            <div class="alert-bell-container">
+                <button class="alert-bell-btn" onclick="toggleAlertPanel()" title="Pattern Alerts">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span class="alert-badge" id="alert-badge" style="display:none;">0</span>
+                </button>
+                <div class="alert-dropdown" id="alert-dropdown" style="display:none;">
+                    <div class="alert-dropdown-header">
+                        <span>Pattern Alerts</span>
+                        <button class="btn btn-outline btn-sm" onclick="markAllAlertsRead()">Mark all read</button>
+                    </div>
+                    <div class="alert-list" id="alert-list">
+                        <p class="muted">Loading alerts...</p>
+                    </div>
+                </div>
+            </div>
             <button class="btn btn-outline" id="admin-link" style="display:none;" onclick="window.location.href='admin.html'">Admin</button>
             <button class="btn btn-outline" onclick="logout()">Logout</button>
         </div>
@@ -59,6 +74,32 @@
             </div>
         </section>
 
+        <!-- AI Market Analysis -->
+        <section class="card analysis-card" id="analysis-card" style="display:none;">
+            <div class="analysis-header" onclick="toggleAnalysisPanel()">
+                <h2><span class="ai-icon">AI</span> Market Analysis</h2>
+                <span class="collapse-icon" id="analysis-collapse-icon">&#9660;</span>
+            </div>
+            <div class="analysis-body" id="analysis-body">
+                <div class="analysis-loading" id="analysis-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Analyzing market data...</span>
+                </div>
+                <div class="analysis-content" id="analysis-content" style="display:none;">
+                    <p class="analysis-summary" id="analysis-summary"></p>
+                    <div class="signals-container" id="analysis-signals"></div>
+                    <div class="risk-factors" id="analysis-risks" style="display:none;">
+                        <h4>Risk Factors</h4>
+                        <ul id="analysis-risks-list"></ul>
+                    </div>
+                    <div class="analysis-outlook" id="analysis-outlook"></div>
+                </div>
+                <div class="analysis-unavailable" id="analysis-unavailable" style="display:none;">
+                    <p class="muted">AI analysis temporarily unavailable</p>
+                </div>
+            </div>
+        </section>
+
         <!-- Market Data Table -->
         <section class="card market-card">
             <div class="market-header">
@@ -82,6 +123,48 @@
                         <tr><td colspan="7" class="loading-text">Loading market data...</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </section>
+
+        <!-- AI Portfolio Risk -->
+        <section class="card risk-card" id="risk-card" style="display:none;">
+            <h2><span class="ai-icon">AI</span> Portfolio Risk</h2>
+            <div class="risk-body" id="risk-body">
+                <div class="risk-loading" id="risk-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Assessing portfolio risk...</span>
+                </div>
+                <div class="risk-content" id="risk-content" style="display:none;">
+                    <div class="risk-score-section">
+                        <div class="risk-score-dial" id="risk-score-dial">
+                            <span class="risk-score-value" id="risk-score-value">-</span>
+                            <span class="risk-score-label">Risk Score</span>
+                        </div>
+                    </div>
+                    <div class="risk-metrics" id="risk-metrics">
+                        <div class="risk-metric">
+                            <span class="risk-metric-label">HHI Index</span>
+                            <span class="risk-metric-value" id="risk-hhi">-</span>
+                        </div>
+                        <div class="risk-metric">
+                            <span class="risk-metric-label">Top Holding</span>
+                            <span class="risk-metric-value" id="risk-top-holding">-</span>
+                        </div>
+                        <div class="risk-metric">
+                            <span class="risk-metric-label">Weighted Volatility</span>
+                            <span class="risk-metric-value" id="risk-volatility">-</span>
+                        </div>
+                    </div>
+                    <div class="risk-narratives" id="risk-narratives" style="display:none;">
+                        <p id="risk-justification"></p>
+                        <p id="risk-concentration"></p>
+                        <p id="risk-volatility-narrative"></p>
+                    </div>
+                    <div class="risk-insight" id="risk-insight" style="display:none;"></div>
+                </div>
+                <div class="risk-unavailable" id="risk-unavailable" style="display:none;">
+                    <p class="muted">Portfolio risk assessment unavailable</p>
+                </div>
             </div>
         </section>
 
@@ -126,6 +209,25 @@
                     <div class="preview-row">
                         <span>Total Cost:</span>
                         <span>$<span id="preview-total">0.00</span></span>
+                    </div>
+                </div>
+                <!-- AI Trade Reasoning -->
+                <div class="trade-reasoning-card" id="trade-reasoning-card" style="display:none;">
+                    <div class="reasoning-header" onclick="toggleReasoningPanel()">
+                        <span><span class="ai-icon ai-icon-sm">AI</span> Analysis</span>
+                        <span class="collapse-icon" id="reasoning-collapse-icon">&#9660;</span>
+                    </div>
+                    <div class="reasoning-body" id="reasoning-body">
+                        <div class="reasoning-loading" id="reasoning-loading">
+                            <div class="loading-spinner loading-spinner-sm"></div>
+                            <span>Loading AI reasoning...</span>
+                        </div>
+                        <div class="reasoning-content" id="reasoning-content" style="display:none;">
+                            <p class="reasoning-context" id="reasoning-context"></p>
+                            <ul class="reasoning-considerations" id="reasoning-considerations"></ul>
+                            <span class="reasoning-sentiment" id="reasoning-sentiment"></span>
+                            <p class="reasoning-disclaimer" id="reasoning-disclaimer"></p>
+                        </div>
                     </div>
                 </div>
                 <div id="trade-error" class="error-message" style="display:none;"></div>
