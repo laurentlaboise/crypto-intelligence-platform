@@ -102,6 +102,20 @@ docker run -p 8080:8080 \
 | GET | `/api/portfolio` | Get portfolio summary | Yes |
 | GET | `/api/transactions` | Get transaction history | Yes |
 
+**POST /api/trade** request body:
+
+```json
+{
+  "coinId": "bitcoin",
+  "action": "BUY",
+  "amountUsd": 500.00
+}
+```
+
+- `coinId` — CoinGecko coin identifier (e.g. `bitcoin`, `ethereum`)
+- `action` — `BUY` or `SELL` (uppercase)
+- `amountUsd` — positive number, USD amount to trade
+
 ### Admin (ADMIN role required)
 
 | Method | Path | Description | Auth |
