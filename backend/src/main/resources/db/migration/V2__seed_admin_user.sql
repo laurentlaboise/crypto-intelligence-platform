@@ -1,7 +1,7 @@
 -- Seed admin user (password: Admin123!)
--- BCrypt hash for 'Admin123!' with default strength
+-- BCrypt hash generated with cost factor 10
 INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
-VALUES ('admin@cryptointel.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Platform Admin', 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES ('admin@cryptointel.com', '$2a$10$tLbj8bqK/uFN5bpeJd123OtScc.VrYfTI6.vaqXWDJjjZB./wlq0a', 'Platform Admin', 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO user_balances (user_id, balance)
-VALUES (1, 10000.00);
+SELECT id, 10000.00 FROM users WHERE email = 'admin@cryptointel.com';

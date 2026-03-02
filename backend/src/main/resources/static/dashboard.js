@@ -142,11 +142,11 @@ async function loadChart(coinId, days) {
 
         let data = await res.json();
 
-        // For 1H, take last ~12 data points from 1-day data
+        // For 1H, filter to last hour from 1-day data; fallback to last 12 points
         if (days < 1) {
             const cutoff = Date.now() - 3600000;
-            data = data.filter(d => d.timestamp >= cutoff);
-            if (data.length < 2) data = (await res.json ? data : data).slice(-12);
+            const filtered = data.filter(d => d.timestamp >= cutoff);
+            data = filtered.length >= 2 ? filtered : data.slice(-12);
         }
 
         renderChart(data);
@@ -264,10 +264,22 @@ async function loadTransactions() {
         const txs = await res.json();
         document.getElementById('total-trades').textContent = txs.length;
 
-        // Calculate win rate from sells
+        // Calculate win rate: for each sold coin, compare avg sell price vs avg buy price
         const sells = txs.filter(t => t.action === 'SELL');
+        const buys = txs.filter(t => t.action === 'BUY');
         if (sells.length > 0) {
-            const wins = sells.filter(t => parseFloat(t.amountUsd) > 0).length;
+            const avgBuyPrice = {};
+            buys.forEach(t => {
+                if (!avgBuyPrice[t.coinId]) avgBuyPrice[t.coinId] = { total: 0, qty: 0 };
+                avgBuyPrice[t.coinId].total += parseFloat(t.amountUsd);
+                avgBuyPrice[t.coinId].qty += parseFloat(t.quantity);
+            });
+            let wins = 0;
+            sells.forEach(t => {
+                const buyInfo = avgBuyPrice[t.coinId];
+                const avgBuy = buyInfo ? buyInfo.total / buyInfo.qty : 0;
+                if (parseFloat(t.executionPrice) >= avgBuy) wins++;
+            });
             document.getElementById('win-rate').textContent = ((wins / sells.length) * 100).toFixed(0) + '%';
         }
 
