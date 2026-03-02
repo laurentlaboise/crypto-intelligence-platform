@@ -32,6 +32,26 @@ app:
     base-url: https://api.coingecko.com/api/v3
     cache-duration-seconds: 30
   default-balance: 10000.00
+  ai:
+    enabled: ${AI_ENABLED:false}
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: gemini-2.0-flash
+    claude:
+      api-key: ${CLAUDE_API_KEY:}
+      model: claude-sonnet-4-20250514
+    claude-haiku:
+      model: claude-haiku-4-5-20251001
+    cache:
+      market-analysis-ttl-minutes: 15
+      portfolio-risk-ttl-minutes: 10
+      trade-reasoning-ttl-minutes: 5
+    budget:
+      daily-tokens-per-user: 100000
+      global-daily-tokens: 5000000
+    pattern-detection:
+      enabled: ${PATTERN_DETECTION_ENABLED:true}
+      interval-ms: 300000
 
 logging:
   level:
