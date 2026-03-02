@@ -33,7 +33,7 @@ app:
     cache-duration-seconds: 30
   default-balance: 10000.00
   ai:
-    enabled: ${AI_ENABLED:false}
+    enabled: ${AI_ENABLED:true}
     gemini:
       api-key: ${GEMINI_API_KEY:}
       model: gemini-2.0-flash
