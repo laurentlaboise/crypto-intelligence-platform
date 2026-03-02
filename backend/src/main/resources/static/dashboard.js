@@ -31,6 +31,10 @@ async function init() {
     // Auto-refresh market data every 30 seconds
     setInterval(loadMarketData, 30000);
     setInterval(loadPortfolio, 30000);
+
+    // Load alert count and poll every 60s
+    loadAlertCount();
+    setInterval(loadAlertCount, 60000);
 }
 
 function authHeaders() {
@@ -124,6 +128,7 @@ function selectCoin(coin) {
     selectedCoin = coin;
     document.getElementById('chart-title').textContent = `${coin.name} (${coin.symbol.toUpperCase()})`;
     loadChart(coin.coinId, currentTimeframeDays);
+    loadMarketAnalysis(coin.coinId);
 }
 
 function changeTimeframe(btn) {
@@ -239,6 +244,11 @@ async function loadPortfolio() {
         changeEl.className = 'stat-value ' + (change24h >= 0 ? 'positive' : 'negative');
 
         renderHoldings(data.holdings || []);
+
+        // Load AI portfolio risk if user has holdings
+        if (data.holdings && data.holdings.length > 0) {
+            loadPortfolioRisk();
+        }
     } catch (err) {
         console.error('Failed to load portfolio:', err);
     }
@@ -355,6 +365,9 @@ function openTradeModal(coinId, action) {
     // Store current coin for trade
     document.getElementById('trade-modal').dataset.coinId = coinId;
     document.getElementById('trade-modal').style.display = 'flex';
+
+    // Fire non-blocking AI reasoning request
+    loadTradeReasoning(coinId, action);
 }
 
 function closeTradeModal() {
@@ -426,6 +439,356 @@ async function executeTrade() {
         btn.textContent = `Confirm ${tradeAction}`;
     }
 }
+
+// ========== AI Feature 1: Market Analysis ==========
+
+async function loadMarketAnalysis(coinId) {
+    const card = document.getElementById('analysis-card');
+    const loading = document.getElementById('analysis-loading');
+    const content = document.getElementById('analysis-content');
+    const unavailable = document.getElementById('analysis-unavailable');
+
+    card.style.display = '';
+    loading.style.display = 'flex';
+    content.style.display = 'none';
+    unavailable.style.display = 'none';
+
+    try {
+        const res = await fetch(`${API_BASE}/api/ai/analysis/${coinId}`, { headers: authHeaders() });
+        if (res.status === 401) { logout(); return; }
+        const data = await res.json();
+
+        loading.style.display = 'none';
+
+        if (!data.available) {
+            unavailable.style.display = 'block';
+            return;
+        }
+
+        const analysis = data.data;
+        document.getElementById('analysis-summary').textContent = analysis.summary || '';
+
+        // Render signals
+        const signalsEl = document.getElementById('analysis-signals');
+        if (analysis.signals && analysis.signals.length > 0) {
+            signalsEl.innerHTML = analysis.signals.map(s => {
+                const sentClass = s.sentiment === 'BULLISH' ? 'signal-bullish' :
+                                  s.sentiment === 'BEARISH' ? 'signal-bearish' : 'signal-neutral';
+                return `<div class="signal-chip ${sentClass}">
+                    <span class="signal-tag">${s.sentiment}</span>
+                    <span class="signal-text">${s.text}</span>
+                    ${s.metric ? `<span class="signal-metric">${s.metric}</span>` : ''}
+                </div>`;
+            }).join('');
+        } else {
+            signalsEl.innerHTML = '';
+        }
+
+        // Render risk factors
+        const risksEl = document.getElementById('analysis-risks');
+        const risksList = document.getElementById('analysis-risks-list');
+        if (analysis.riskFactors && analysis.riskFactors.length > 0) {
+            risksList.innerHTML = analysis.riskFactors.map(r => `<li>${r}</li>`).join('');
+            risksEl.style.display = 'block';
+        } else {
+            risksEl.style.display = 'none';
+        }
+
+        // Render outlook
+        document.getElementById('analysis-outlook').textContent = analysis.outlook || '';
+
+        content.style.display = 'block';
+    } catch (err) {
+        loading.style.display = 'none';
+        unavailable.style.display = 'block';
+        console.error('Failed to load market analysis:', err);
+    }
+}
+
+function toggleAnalysisPanel() {
+    const body = document.getElementById('analysis-body');
+    const icon = document.getElementById('analysis-collapse-icon');
+    if (body.style.display === 'none') {
+        body.style.display = '';
+        icon.innerHTML = '&#9660;';
+    } else {
+        body.style.display = 'none';
+        icon.innerHTML = '&#9654;';
+    }
+}
+
+// ========== AI Feature 2: Portfolio Risk ==========
+
+let portfolioRiskLoaded = false;
+
+async function loadPortfolioRisk() {
+    if (portfolioRiskLoaded) return;
+
+    const card = document.getElementById('risk-card');
+    const loading = document.getElementById('risk-loading');
+    const content = document.getElementById('risk-content');
+    const unavailable = document.getElementById('risk-unavailable');
+
+    card.style.display = '';
+    loading.style.display = 'flex';
+    content.style.display = 'none';
+    unavailable.style.display = 'none';
+
+    try {
+        const res = await fetch(`${API_BASE}/api/ai/portfolio-risk`, { headers: authHeaders() });
+        if (res.status === 401) { logout(); return; }
+        const data = await res.json();
+
+        loading.style.display = 'none';
+
+        if (!data.available) {
+            unavailable.style.display = 'block';
+            return;
+        }
+
+        portfolioRiskLoaded = true;
+        const risk = data.data;
+
+        // Risk score dial
+        const scoreVal = document.getElementById('risk-score-value');
+        const scoreDial = document.getElementById('risk-score-dial');
+        if (risk.riskScore != null) {
+            scoreVal.textContent = risk.riskScore;
+            if (risk.riskScore <= 3) {
+                scoreDial.className = 'risk-score-dial risk-low';
+            } else if (risk.riskScore <= 6) {
+                scoreDial.className = 'risk-score-dial risk-medium';
+            } else {
+                scoreDial.className = 'risk-score-dial risk-high';
+            }
+        }
+
+        // Metrics
+        document.getElementById('risk-hhi').textContent = risk.hhiIndex != null ? parseFloat(risk.hhiIndex).toFixed(4) : '-';
+        document.getElementById('risk-top-holding').textContent = risk.topHoldingCoinId ?
+            `${risk.topHoldingCoinId} (${parseFloat(risk.topHoldingPercentage).toFixed(1)}%)` : '-';
+        document.getElementById('risk-volatility').textContent = risk.weightedVolatility != null ?
+            parseFloat(risk.weightedVolatility).toFixed(2) + '%' : '-';
+
+        // AI narratives
+        const narratives = document.getElementById('risk-narratives');
+        if (risk.riskJustification) {
+            document.getElementById('risk-justification').textContent = risk.riskJustification;
+            document.getElementById('risk-concentration').textContent = risk.concentrationNarrative || '';
+            document.getElementById('risk-volatility-narrative').textContent = risk.volatilityNarrative || '';
+            narratives.style.display = 'block';
+        }
+
+        // Actionable insight
+        const insight = document.getElementById('risk-insight');
+        if (risk.actionableInsight) {
+            insight.textContent = risk.actionableInsight;
+            insight.style.display = 'block';
+        }
+
+        content.style.display = 'block';
+    } catch (err) {
+        loading.style.display = 'none';
+        unavailable.style.display = 'block';
+        console.error('Failed to load portfolio risk:', err);
+    }
+}
+
+// ========== AI Feature 3: Trade Reasoning ==========
+
+async function loadTradeReasoning(coinId, action) {
+    const card = document.getElementById('trade-reasoning-card');
+    const loading = document.getElementById('reasoning-loading');
+    const content = document.getElementById('reasoning-content');
+
+    card.style.display = 'block';
+    loading.style.display = 'flex';
+    content.style.display = 'none';
+
+    try {
+        const res = await fetch(`${API_BASE}/api/ai/trade-reasoning/${coinId}/${action}`, { headers: authHeaders() });
+        if (res.status === 401) { logout(); return; }
+        const data = await res.json();
+
+        loading.style.display = 'none';
+
+        if (!data.available) {
+            card.style.display = 'none';
+            return;
+        }
+
+        const reasoning = data.data;
+        document.getElementById('reasoning-context').textContent = reasoning.context || '';
+
+        const considerations = document.getElementById('reasoning-considerations');
+        if (reasoning.considerations && reasoning.considerations.length > 0) {
+            considerations.innerHTML = reasoning.considerations.map(c => `<li>${c}</li>`).join('');
+        } else {
+            considerations.innerHTML = '';
+        }
+
+        const sentiment = document.getElementById('reasoning-sentiment');
+        sentiment.textContent = reasoning.sentiment || '';
+        sentiment.className = 'reasoning-sentiment';
+        if (reasoning.sentiment === 'Data Supportive') {
+            sentiment.classList.add('sentiment-supportive');
+        } else if (reasoning.sentiment === 'Data Cautionary') {
+            sentiment.classList.add('sentiment-cautionary');
+        } else {
+            sentiment.classList.add('sentiment-neutral');
+        }
+
+        document.getElementById('reasoning-disclaimer').textContent = reasoning.disclaimer || '';
+
+        content.style.display = 'block';
+    } catch (err) {
+        loading.style.display = 'none';
+        card.style.display = 'none';
+        console.error('Failed to load trade reasoning:', err);
+    }
+}
+
+function toggleReasoningPanel() {
+    const body = document.getElementById('reasoning-body');
+    const icon = document.getElementById('reasoning-collapse-icon');
+    if (body.style.display === 'none') {
+        body.style.display = '';
+        icon.innerHTML = '&#9660;';
+    } else {
+        body.style.display = 'none';
+        icon.innerHTML = '&#9654;';
+    }
+}
+
+// ========== AI Feature 4: Pattern Alerts ==========
+
+async function loadAlertCount() {
+    try {
+        const res = await fetch(`${API_BASE}/api/ai/alerts/unread-count`, { headers: authHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById('alert-badge');
+        if (data.count > 0) {
+            badge.textContent = data.count > 99 ? '99+' : data.count;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch (err) {
+        console.error('Failed to load alert count:', err);
+    }
+}
+
+async function toggleAlertPanel() {
+    const dropdown = document.getElementById('alert-dropdown');
+    if (dropdown.style.display === 'none') {
+        dropdown.style.display = 'block';
+        await loadAlerts();
+    } else {
+        dropdown.style.display = 'none';
+    }
+}
+
+async function loadAlerts() {
+    const list = document.getElementById('alert-list');
+    try {
+        const res = await fetch(`${API_BASE}/api/ai/alerts`, { headers: authHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const alerts = data.data || [];
+
+        if (alerts.length === 0) {
+            list.innerHTML = '<p class="muted" style="padding:12px;text-align:center;">No alerts yet</p>';
+            return;
+        }
+
+        list.innerHTML = alerts.map(a => {
+            const severityClass = `alert-severity-${(a.severity || 'low').toLowerCase()}`;
+            const unreadClass = a.read ? '' : 'alert-unread';
+            return `
+            <div class="alert-item ${unreadClass}" data-alert-id="${a.id}" onclick="toggleAlertDetail(this)">
+                <div class="alert-item-header">
+                    <span class="alert-severity ${severityClass}">${a.severity}</span>
+                    <span class="alert-title">${a.title}</span>
+                    <span class="alert-time">${timeAgo(a.createdAt)}</span>
+                </div>
+                <div class="alert-detail" style="display:none;">
+                    ${a.narrative ? `<p class="alert-narrative">${a.narrative}</p>` : ''}
+                    <span class="alert-coin">${a.coinId} &middot; ${a.patternType.replace(/_/g, ' ')}</span>
+                </div>
+            </div>`;
+        }).join('');
+    } catch (err) {
+        list.innerHTML = '<p class="muted" style="padding:12px;">Failed to load alerts</p>';
+        console.error('Failed to load alerts:', err);
+    }
+}
+
+async function toggleAlertDetail(el) {
+    const detail = el.querySelector('.alert-detail');
+    if (detail.style.display === 'none') {
+        detail.style.display = 'block';
+        // Mark as read if unread
+        if (el.classList.contains('alert-unread')) {
+            const alertId = parseInt(el.dataset.alertId);
+            el.classList.remove('alert-unread');
+            try {
+                await fetch(`${API_BASE}/api/ai/alerts/mark-read`, {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ alertIds: [alertId] })
+                });
+                loadAlertCount();
+            } catch (err) {
+                console.error('Failed to mark alert read:', err);
+            }
+        }
+    } else {
+        detail.style.display = 'none';
+    }
+}
+
+async function markAllAlertsRead() {
+    try {
+        const items = document.querySelectorAll('.alert-item.alert-unread');
+        const ids = Array.from(items).map(el => parseInt(el.dataset.alertId)).filter(id => !isNaN(id));
+        if (ids.length === 0) return;
+
+        await fetch(`${API_BASE}/api/ai/alerts/mark-read`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ alertIds: ids })
+        });
+
+        items.forEach(el => el.classList.remove('alert-unread'));
+        loadAlertCount();
+    } catch (err) {
+        console.error('Failed to mark all alerts read:', err);
+    }
+}
+
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return minutes + 'm ago';
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return hours + 'h ago';
+    const days = Math.floor(hours / 24);
+    return days + 'd ago';
+}
+
+// Close alert dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const container = document.querySelector('.alert-bell-container');
+    const dropdown = document.getElementById('alert-dropdown');
+    if (container && dropdown && !container.contains(e.target)) {
+        dropdown.style.display = 'none';
+    }
+});
 
 function logout() {
     localStorage.removeItem('authToken');
