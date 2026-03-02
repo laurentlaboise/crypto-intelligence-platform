@@ -21,6 +21,7 @@ public class MarketDataService {
 
     private volatile List<Map<String, Object>> cachedMarketData = new ArrayList<>();
     private final Map<String, BigDecimal> priceCache = new ConcurrentHashMap<>();
+    private final Map<String, BigDecimal> priceChange24hCache = new ConcurrentHashMap<>();
 
     public MarketDataService(@Value("${app.coingecko.base-url}") String baseUrl) {
         this.baseUrl = baseUrl;
@@ -50,11 +51,13 @@ public class MarketDataService {
 
                     marketData.add(filtered);
 
+                    String id = (String) coinMap.get("id");
                     if (price != null) {
-                        priceCache.put(
-                            (String) coinMap.get("id"),
-                            new BigDecimal(price.toString())
-                        );
+                        priceCache.put(id, new BigDecimal(price.toString()));
+                    }
+                    Object pctChange = coinMap.get("price_change_percentage_24h");
+                    if (pctChange != null) {
+                        priceChange24hCache.put(id, new BigDecimal(pctChange.toString()));
                     }
                 }
                 cachedMarketData = marketData;
@@ -71,6 +74,10 @@ public class MarketDataService {
 
     public BigDecimal getCurrentPrice(String coinId) {
         return priceCache.get(coinId);
+    }
+
+    public BigDecimal getPriceChangePercentage24h(String coinId) {
+        return priceChange24hCache.get(coinId);
     }
 
     public List<Map<String, Object>> getPriceHistory(String coinId, int days) {

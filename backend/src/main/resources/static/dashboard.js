@@ -7,6 +7,7 @@ let selectedCoin = null;
 let tradeAction = 'BUY';
 let priceChart = null;
 let currentTimeframeDays = 1;
+let modalCloseTimeout = null;
 
 // Auth guard
 (function checkAuth() {
@@ -229,6 +230,14 @@ async function loadPortfolio() {
         document.getElementById('user-balance').textContent = parseFloat(data.currentBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         document.getElementById('total-value').textContent = formatUsd(data.totalPortfolioValue);
 
+        // Display 24h portfolio change
+        const change24h = parseFloat(data.portfolioChange24h) || 0;
+        const changePct = parseFloat(data.portfolioChange24hPercentage) || 0;
+        const sign = change24h >= 0 ? '+' : '';
+        const changeEl = document.getElementById('portfolio-change');
+        changeEl.textContent = `${sign}$${Math.abs(change24h).toFixed(2)} (${sign}${changePct.toFixed(2)}%)`;
+        changeEl.className = 'stat-value ' + (change24h >= 0 ? 'positive' : 'negative');
+
         renderHoldings(data.holdings || []);
     } catch (err) {
         console.error('Failed to load portfolio:', err);
@@ -277,10 +286,12 @@ async function loadTransactions() {
             let wins = 0;
             sells.forEach(t => {
                 const buyInfo = avgBuyPrice[t.coinId];
-                const avgBuy = buyInfo ? buyInfo.total / buyInfo.qty : 0;
+                const avgBuy = (buyInfo && buyInfo.qty > 0) ? buyInfo.total / buyInfo.qty : 0;
                 if (parseFloat(t.executionPrice) >= avgBuy) wins++;
             });
             document.getElementById('win-rate').textContent = ((wins / sells.length) * 100).toFixed(0) + '%';
+        } else {
+            document.getElementById('win-rate').textContent = 'N/A';
         }
 
         renderTransactions(txs);
@@ -315,16 +326,31 @@ function openTradeModal(coinId, action) {
     const coin = marketData.find(c => c.coinId === coinId);
     if (!coin) return;
 
+    // Cancel any pending auto-close from a previous trade
+    if (modalCloseTimeout) {
+        clearTimeout(modalCloseTimeout);
+        modalCloseTimeout = null;
+    }
+
     tradeAction = action;
     document.getElementById('modal-title').textContent = `${action} ${coin.name} (${coin.symbol.toUpperCase()})`;
-    document.getElementById('modal-price').textContent = parseFloat(coin.currentPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+
+    const price = parseFloat(coin.currentPrice);
+    const execBtn = document.getElementById('trade-execute-btn');
+    if (!price || isNaN(price) || price <= 0) {
+        document.getElementById('modal-price').textContent = 'Price unavailable';
+        execBtn.disabled = true;
+    } else {
+        document.getElementById('modal-price').textContent = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+        execBtn.disabled = false;
+    }
+
     document.getElementById('trade-amount').value = '';
     document.getElementById('trade-preview').style.display = 'none';
     document.getElementById('trade-error').style.display = 'none';
     document.getElementById('trade-success').style.display = 'none';
-    document.getElementById('trade-execute-btn').disabled = false;
-    document.getElementById('trade-execute-btn').textContent = `Confirm ${action}`;
-    document.getElementById('trade-execute-btn').className = `btn ${action === 'BUY' ? 'btn-buy' : 'btn-sell'}`;
+    execBtn.textContent = `Confirm ${action}`;
+    execBtn.className = `btn ${action === 'BUY' ? 'btn-buy' : 'btn-sell'}`;
 
     // Store current coin for trade
     document.getElementById('trade-modal').dataset.coinId = coinId;
@@ -332,6 +358,10 @@ function openTradeModal(coinId, action) {
 }
 
 function closeTradeModal() {
+    if (modalCloseTimeout) {
+        clearTimeout(modalCloseTimeout);
+        modalCloseTimeout = null;
+    }
     document.getElementById('trade-modal').style.display = 'none';
 }
 
@@ -340,7 +370,7 @@ function updateTradePreview() {
     const coinId = document.getElementById('trade-modal').dataset.coinId;
     const coin = marketData.find(c => c.coinId === coinId);
 
-    if (!coin || isNaN(amount) || amount <= 0) {
+    if (!coin || isNaN(amount) || amount <= 0 || !coin.currentPrice || coin.currentPrice <= 0) {
         document.getElementById('trade-preview').style.display = 'none';
         return;
     }
@@ -383,7 +413,7 @@ async function executeTrade() {
             // Refresh data
             await Promise.all([loadPortfolio(), loadTransactions()]);
 
-            setTimeout(closeTradeModal, 1500);
+            modalCloseTimeout = setTimeout(closeTradeModal, 1500);
         } else {
             document.getElementById('trade-error').textContent = data.message || 'Trade failed';
             document.getElementById('trade-error').style.display = 'block';

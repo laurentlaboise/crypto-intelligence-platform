@@ -108,6 +108,7 @@ public class TradingService {
 
         List<PortfolioHolding> holdings = holdingRepository.findByUserId(userId);
         BigDecimal totalHoldingsValue = BigDecimal.ZERO;
+        BigDecimal totalChange24h = BigDecimal.ZERO;
         List<Map<String, Object>> holdingsList = new ArrayList<>();
 
         for (PortfolioHolding holding : holdings) {
@@ -116,6 +117,16 @@ public class TradingService {
 
             BigDecimal currentValue = holding.getQuantity().multiply(price);
             totalHoldingsValue = totalHoldingsValue.add(currentValue);
+
+            // Calculate 24h change for this holding
+            BigDecimal pctChange24h = marketDataService.getPriceChangePercentage24h(holding.getCoinId());
+            if (pctChange24h != null && pctChange24h.compareTo(new BigDecimal("-99.99")) > 0) {
+                BigDecimal divisor = BigDecimal.ONE.add(pctChange24h.divide(new BigDecimal("100"), 10, RoundingMode.HALF_UP));
+                if (divisor.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal value24hAgo = currentValue.divide(divisor, 10, RoundingMode.HALF_UP);
+                    totalChange24h = totalChange24h.add(currentValue.subtract(value24hAgo));
+                }
+            }
 
             // Calculate P/L from transactions
             List<com.cryptointel.models.Transaction> txs =
@@ -147,9 +158,20 @@ public class TradingService {
 
         BigDecimal totalPortfolioValue = userBalance.getBalance().add(totalHoldingsValue);
 
+        // Calculate 24h change percentage relative to yesterday's portfolio value
+        BigDecimal portfolioValueYesterday = totalPortfolioValue.subtract(totalChange24h);
+        BigDecimal change24hPct = BigDecimal.ZERO;
+        if (portfolioValueYesterday.compareTo(BigDecimal.ZERO) > 0) {
+            change24hPct = totalChange24h
+                    .divide(portfolioValueYesterday, 4, RoundingMode.HALF_UP)
+                    .multiply(new BigDecimal("100"));
+        }
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("currentBalance", userBalance.getBalance().setScale(2, RoundingMode.HALF_UP));
         result.put("totalPortfolioValue", totalPortfolioValue.setScale(2, RoundingMode.HALF_UP));
+        result.put("portfolioChange24h", totalChange24h.setScale(2, RoundingMode.HALF_UP));
+        result.put("portfolioChange24hPercentage", change24hPct.setScale(2, RoundingMode.HALF_UP));
         result.put("holdings", holdingsList);
         return result;
     }
